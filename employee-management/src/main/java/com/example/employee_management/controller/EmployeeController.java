@@ -1,6 +1,6 @@
 package com.example.employee_management.controller;
 
-import com.example.employee_management.entity.Employee;
+import com.example.employee_management.dto.EmployeeDTO;
 import com.example.employee_management.service.EmployeeService;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,17 +17,17 @@ public class EmployeeController {
     }
 
     @GetMapping
-    public List<Employee> getAllEmployees() {
+    public List<EmployeeDTO> getAllEmployees() {
         return employeeService.getAllEmployees();
     }
 
     @PostMapping
-    public Employee createEmployee(@RequestBody Employee employee) {
-        return employeeService.saveEmployee(employee);
+    public EmployeeDTO createEmployee(@RequestBody EmployeeDTO employeeDTO) {
+        return employeeService.saveEmployee(employeeDTO);
     }
 
     @GetMapping("/{id}")
-    public Employee getEmployeeById(@PathVariable Long id) {
+    public EmployeeDTO getEmployeeById(@PathVariable Long id) {
         return employeeService.getEmployeeById(id);
     }
 

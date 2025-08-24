@@ -1,34 +1,63 @@
 package com.example.employee_management.service;
 
-import org.springframework.stereotype.Service;
+import com.example.employee_management.dto.EmployeeDTO;
 import com.example.employee_management.entity.Employee;
-import java.util.*;
-
 import com.example.employee_management.repository.EmployeeRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class EmployeeService {
 
-    private EmployeeRepository employeeRepository;
+    private final EmployeeRepository employeeRepository;
 
-    public EmployeeService(EmployeeRepository employeeRepository){
-        this.employeeRepository=employeeRepository;
+    public EmployeeService(EmployeeRepository employeeRepository) {
+        this.employeeRepository = employeeRepository;
     }
 
-    public List<Employee> getAllEmployees(){
-            return employeeRepository.findAll();
+    // Convert Entity to DTO
+    private EmployeeDTO convertToDTO(Employee employee) {
+        return new EmployeeDTO(
+                employee.getId(),
+                employee.getName(),
+                employee.getEmail(),
+                employee.getDepartment()
+        );
     }
 
-    public Employee saveEmployee(Employee employee){
-        return employeeRepository.save(employee);
+    // Convert DTO to Entity
+    private Employee convertToEntity(EmployeeDTO employeeDTO) {
+        Employee employee = new Employee();
+        employee.setId(employeeDTO.getId());
+        employee.setName(employeeDTO.getName());
+        employee.setEmail(employeeDTO.getEmail());
+        employee.setDepartment(employeeDTO.getDepartment());
+        return employee;
     }
 
-    public Employee getEmployeeById(Long id){
-        return employeeRepository.findById(id).orElse(null);
+    public List<EmployeeDTO> getAllEmployees() {
+        return employeeRepository.findAll()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
-    public void deleteEmployee(Long id){
+    public EmployeeDTO saveEmployee(EmployeeDTO employeeDTO) {
+        Employee employee = convertToEntity(employeeDTO);
+        Employee savedEmployee = employeeRepository.save(employee);
+        return convertToDTO(savedEmployee);
+    }
+
+    public EmployeeDTO getEmployeeById(Long id) {
+        return employeeRepository.findById(id)
+                .map(this::convertToDTO)
+                .orElse(null);
+    }
+
+    public void deleteEmployee(Long id) {
         employeeRepository.deleteById(id);
     }
-    
 }
+
