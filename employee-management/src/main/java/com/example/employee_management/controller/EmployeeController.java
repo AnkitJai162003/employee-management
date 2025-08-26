@@ -2,6 +2,9 @@ package com.example.employee_management.controller;
 
 import com.example.employee_management.dto.EmployeeDTO;
 import com.example.employee_management.service.EmployeeService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +28,7 @@ public class EmployeeController {
 
     // Create Employee
     @PostMapping
-    public EmployeeDTO createEmployee(@RequestBody EmployeeDTO employeeDTO) {
+    public EmployeeDTO createEmployee(@Valid @RequestBody EmployeeDTO employeeDTO) {
         return employeeService.saveEmployee(employeeDTO);
     }
 

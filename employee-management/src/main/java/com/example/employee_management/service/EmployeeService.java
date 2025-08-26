@@ -2,6 +2,7 @@ package com.example.employee_management.service;
 
 import com.example.employee_management.dto.EmployeeDTO;
 import com.example.employee_management.entity.Employee;
+import com.example.employee_management.exception.EmployeeNotFoundException;
 import com.example.employee_management.repository.EmployeeRepository;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
@@ -39,7 +40,8 @@ public class EmployeeService {
 
     // Get Employee By ID
     public EmployeeDTO getEmployeeById(Long id) {
-        return employeeRepository.findById(id).map(this::convertToDTO).orElse(null);
+        return employeeRepository.findById(id).map(this::convertToDTO)
+        .orElseThrow(() -> new EmployeeNotFoundException("Employee with ID " +  id  + " not found"));
     }
 
     // Delete Employee
