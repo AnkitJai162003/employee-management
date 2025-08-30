@@ -21,35 +21,50 @@ import org.springframework.cache.annotation.CachePut;
 public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
+    private final NotificationService notificationService;
 
-    public EmployeeService(EmployeeRepository employeeRepository) {
+    public EmployeeService(EmployeeRepository employeeRepository,NotificationService notificationService) {
         this.employeeRepository = employeeRepository;
+        this.notificationService = notificationService;
     }
 
     private EmployeeDTO convertToDTO(Employee employee) {
         return new EmployeeDTO(employee.getId(), employee.getName(), employee.getEmail(), employee.getDepartment());
     }
 
-    @CachePut(value = "employees", key = "#employeeDTO.id")
+//    @CachePut(value = "employees", key = "#employeeDTO.id")
     public EmployeeDTO saveEmployee(EmployeeDTO employeeDTO) {
-        Employee employee = new Employee(employeeDTO.getId(), employeeDTO.getName(), employeeDTO.getEmail(), employeeDTO.getDepartment());
-        return convertToDTO(employeeRepository.save(employee));
+        Employee employee = new Employee(
+                employeeDTO.getId(),
+                employeeDTO.getName(),
+                employeeDTO.getEmail(),
+                employeeDTO.getDepartment()
+        );
+
+        EmployeeDTO savedEmployee = convertToDTO(employeeRepository.save(employee));
+
+        // Trigger async notification (does not block response)
+        notificationService.sendEmployeeNotification(savedEmployee.getName());
+
+        return savedEmployee;
     }
 
-    @Cacheable(value = "employeesList")
+//    @Cacheable(value = "employeesList")
     public List<EmployeeDTO> getAllEmployees() {
         return employeeRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
-    @Cacheable(value = "employees", key = "#id")
+//    @Cacheable(value = "employees", key = "#id")
     public EmployeeDTO getEmployeeById(Long id) {
         return employeeRepository.findById(id).map(this::convertToDTO)
             .orElseThrow(() -> new EmployeeNotFoundException("Employee with ID " + id + " not found"));
     }
 
-    @CacheEvict(value = {"employees", "employeesList"}, allEntries = true)
+//    @CacheEvict(value = {"employees", "employeesList"}, allEntries = true)
     public void deleteEmployee(Long id) {
         employeeRepository.deleteById(id);
+
+        notificationService.sendEmployeeNotification("Deleted Employee ID: " + id);
     }
 
     public Page<EmployeeDTO> getEmployeesPaginated(int page, int size, String sortBy, String sortDir) {
