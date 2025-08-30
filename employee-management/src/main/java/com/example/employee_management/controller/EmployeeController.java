@@ -2,6 +2,10 @@ package com.example.employee_management.controller;
 
 import com.example.employee_management.dto.EmployeeDTO;
 import com.example.employee_management.service.EmployeeService;
+// at class top:
+import org.springframework.security.access.prepost.PreAuthorize;
+
+
 
 import jakarta.validation.Valid;
 
@@ -21,6 +25,8 @@ public class EmployeeController {
     }
 
     // Get all employees
+    // then above any method you want restricted:
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public List<EmployeeDTO> getAllEmployees() {
         return employeeService.getAllEmployees();
