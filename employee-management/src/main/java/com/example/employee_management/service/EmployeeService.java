@@ -13,6 +13,10 @@ import java.util.stream.Collectors;
 import static com.example.employee_management.specification.EmployeeSpecification.hasDepartment;
 import static com.example.employee_management.specification.EmployeeSpecification.hasName;
 
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+
 @Service
 public class EmployeeService {
 
@@ -22,47 +26,42 @@ public class EmployeeService {
         this.employeeRepository = employeeRepository;
     }
 
-    // Convert Entity to DTO
     private EmployeeDTO convertToDTO(Employee employee) {
         return new EmployeeDTO(employee.getId(), employee.getName(), employee.getEmail(), employee.getDepartment());
     }
 
-    // Create or Update Employee
+    @CachePut(value = "employees", key = "#employeeDTO.id")
     public EmployeeDTO saveEmployee(EmployeeDTO employeeDTO) {
         Employee employee = new Employee(employeeDTO.getId(), employeeDTO.getName(), employeeDTO.getEmail(), employeeDTO.getDepartment());
         return convertToDTO(employeeRepository.save(employee));
     }
 
-    // Get All Employees
+    @Cacheable(value = "employeesList")
     public List<EmployeeDTO> getAllEmployees() {
         return employeeRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
-    // Get Employee By ID
+    @Cacheable(value = "employees", key = "#id")
     public EmployeeDTO getEmployeeById(Long id) {
         return employeeRepository.findById(id).map(this::convertToDTO)
-        .orElseThrow(() -> new EmployeeNotFoundException("Employee with ID " +  id  + " not found"));
+            .orElseThrow(() -> new EmployeeNotFoundException("Employee with ID " + id + " not found"));
     }
 
-    // Delete Employee
+    @CacheEvict(value = {"employees", "employeesList"}, allEntries = true)
     public void deleteEmployee(Long id) {
         employeeRepository.deleteById(id);
     }
 
-    // Pagination + Sorting
     public Page<EmployeeDTO> getEmployeesPaginated(int page, int size, String sortBy, String sortDir) {
         Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         return employeeRepository.findAll(pageable).map(this::convertToDTO);
     }
 
-    // Filtering + Pagination + Sorting
     public Page<EmployeeDTO> getEmployeesWithFilter(String name, String department, int page, int size, String sortBy, String sortDir) {
         Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
-
         Specification<Employee> spec = Specification.where(hasName(name)).and(hasDepartment(department));
-
         return employeeRepository.findAll(spec, pageable).map(this::convertToDTO);
     }
 }
