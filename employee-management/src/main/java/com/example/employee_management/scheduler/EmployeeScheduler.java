@@ -14,10 +14,10 @@ public class EmployeeScheduler {
         this.employeeRepository=employeeRepository;
     }
 
-//    Run every 2 seconds
-    @Scheduled(fixedRate=2000)
+//    Run every 2 seconds -(2000)
+    @Scheduled(fixedRate=200000)
     public void logEmployeeCount(){
         long count=employeeRepository.count();
-        System.out.println("Total employees " + count + " (Logged every 2 seconds)");
+        System.out.println("Total employees " + count + " (Logged every 20 seconds)");
     }
 }

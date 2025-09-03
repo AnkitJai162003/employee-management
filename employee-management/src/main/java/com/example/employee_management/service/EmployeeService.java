@@ -4,6 +4,9 @@ import com.example.employee_management.dto.EmployeeDTO;
 import com.example.employee_management.entity.Employee;
 import com.example.employee_management.exception.EmployeeNotFoundException;
 import com.example.employee_management.repository.EmployeeRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -17,8 +20,12 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 
+//@Slf4j
 @Service
 public class EmployeeService {
+
+    private static final Logger logger = LoggerFactory.getLogger(EmployeeService.class);
+
 
     private final EmployeeRepository employeeRepository;
     private final NotificationService notificationService;
@@ -34,6 +41,7 @@ public class EmployeeService {
 
 //    @CachePut(value = "employees", key = "#employeeDTO.id")
     public EmployeeDTO saveEmployee(EmployeeDTO employeeDTO) {
+        logger.info("Saving employee with name: {}", employeeDTO.getName());
         Employee employee = new Employee(
                 employeeDTO.getId(),
                 employeeDTO.getName(),
@@ -51,17 +59,21 @@ public class EmployeeService {
 
 //    @Cacheable(value = "employeesList")
     public List<EmployeeDTO> getAllEmployees() {
+        logger.debug("Fetching all employees from database or cache");
         return employeeRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
 //    @Cacheable(value = "employees", key = "#id")
     public EmployeeDTO getEmployeeById(Long id) {
+        logger.info("Fetching employee with ID: {}", id);
         return employeeRepository.findById(id).map(this::convertToDTO)
             .orElseThrow(() -> new EmployeeNotFoundException("Employee with ID " + id + " not found"));
     }
 
 //    @CacheEvict(value = {"employees", "employeesList"}, allEntries = true)
     public void deleteEmployee(Long id) {
+        logger.warn("Deleting employee with ID: {}", id);
+
         employeeRepository.deleteById(id);
 
         notificationService.sendEmployeeNotification("Deleted Employee ID: " + id);

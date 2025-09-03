@@ -3,6 +3,7 @@ package com.example.employee_management.controller;
 import com.example.employee_management.dto.EmployeeDTO;
 import com.example.employee_management.service.EmployeeService;
 // at class top:
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/employees")
 public class EmployeeController {
@@ -29,25 +31,37 @@ public class EmployeeController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public List<EmployeeDTO> getAllEmployees() {
-        return employeeService.getAllEmployees();
+        log.info("Request received: Fetching all employees");
+        List<EmployeeDTO> employees = employeeService.getAllEmployees();
+        log.debug("Fetched {} employees", employees.size());
+        return employees;
     }
 
     // Create Employee
     @PostMapping
     public EmployeeDTO createEmployee(@Valid @RequestBody EmployeeDTO employeeDTO) {
-        return employeeService.saveEmployee(employeeDTO);
+        log.info("Request received: Creating employee with name={}", employeeDTO.getName());
+        EmployeeDTO savedEmployee = employeeService.saveEmployee(employeeDTO);
+        log.info("Employee created successfully with id={}", savedEmployee.getId());
+        return savedEmployee;
     }
 
     // Get Employee by ID
     @GetMapping("/{id}")
     public EmployeeDTO getEmployeeById(@PathVariable Long id) {
-        return employeeService.getEmployeeById(id);
+        log.info("Request received: Fetching employee with id={}", id);
+        EmployeeDTO employee = employeeService.getEmployeeById(id);
+        log.debug("Fetched employee details: {}", employee);
+        return employee;
+
     }
 
     // Delete Employee
     @DeleteMapping("/{id}")
     public String deleteEmployee(@PathVariable Long id) {
+        log.warn("Request received: Deleting employee with id={}", id);
         employeeService.deleteEmployee(id);
+        log.info("Employee with id={} deleted successfully", id);
         return "Employee deleted successfully";
     }
 
@@ -58,7 +72,11 @@ public class EmployeeController {
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        return employeeService.getEmployeesPaginated(page, size, sortBy, sortDir);
+        log.info("Request received: Paginated fetch - page={}, size={}, sortBy={}, sortDir={}",
+                page, size, sortBy, sortDir);
+        Page<EmployeeDTO> paginatedResult = employeeService.getEmployeesPaginated(page, size, sortBy, sortDir);
+        log.debug("Paginated fetch result size={}", paginatedResult.getTotalElements());
+        return paginatedResult;
     }
 
     // Filtering + Pagination + Sorting
@@ -70,7 +88,11 @@ public class EmployeeController {
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        return employeeService.getEmployeesWithFilter(name, department, page, size, sortBy, sortDir);
+        log.info("Request received: Filtered fetch - name={}, department={}, page={}, size={}",
+                name, department, page, size);
+        Page<EmployeeDTO> filteredResult = employeeService.getEmployeesWithFilter(name, department, page, size, sortBy, sortDir);
+        log.debug("Filtered fetch result size={}", filteredResult.getTotalElements());
+        return filteredResult;
     }
 }
 
